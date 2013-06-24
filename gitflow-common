@@ -179,8 +179,7 @@ gitflow_has_prefixes_configured() {
 	git config --get gitflow.prefix.feature >/dev/null 2>&1     && \
 	git config --get gitflow.prefix.release >/dev/null 2>&1     && \
 	git config --get gitflow.prefix.hotfix >/dev/null 2>&1      && \
-	git config --get gitflow.prefix.support >/dev/null 2>&1     && \
-	git config --get gitflow.prefix.versiontag >/dev/null 2>&1
+	git config --get gitflow.prefix.support >/dev/null 2>&1
 }
 
 gitflow_is_initialized() {
@@ -322,5 +321,28 @@ require_branches_equal() {
 		else
 			die "Branches need merging first."
 		fi
+	fi
+}
+
+validate_version_arg() {
+	if ! [[ $1 =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then 
+		die "Version: $1 is not valid. Versions should look like v1.2.3 or 1.2.3"
+	fi
+}
+
+increment_patch_version_by_one() {
+	original_version=$1
+	has_v=false
+	if [[ $1 == v* ]]; then
+		original_version=${original_version:1}
+		has_v=true
+	fi
+	IFS=. read -a version_array <<< "$original_version"
+	patch=$((${version_array[2]} + 1))
+	local new_version="${version_array[0]}.${version_array[1]}.$patch"
+	if $has_v; then
+		echo "v$new_version"
+	else 
+		echo "$new_version"
 	fi
 }
