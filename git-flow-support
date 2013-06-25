@@ -40,16 +40,12 @@ init() {
   require_git_repo
   require_gitflow_initialized
   gitflow_load_settings
-  VERSION_PREFIX=$(eval "echo `git config --get gitflow.prefix.versiontag`")
   PREFIX=$(git config --get gitflow.prefix.support)
 }
 
-warn "note: The support subcommand is still very EXPERIMENTAL!"
-warn "note: DO NOT use it in a production situation."
-
 usage() {
 	echo "usage: git flow support [list] [-v]"
-	echo "       git flow support start [-F] <version> <base>"
+	echo "       git flow support start [-F] <version> <customer> <base>"
 }
 
 cmd_default() {
@@ -129,13 +125,22 @@ parse_args() {
 
 	# read arguments into global variables
 	VERSION=$1
-	BASE=$2
-	BRANCH=$PREFIX$VERSION
+	CUSTOMER=$2
+	BASE=$3
+	BRANCH="$PREFIX$VERSION-$CUSTOMER"
 }
 
 require_version_arg() {
 	if [ "$VERSION" = "" ]; then
 		warn "Missing argument <version>"
+		usage
+		exit 1
+	fi
+}
+
+require_customer_arg() {
+	if [ "$CUSTOMER" = "" ]; then
+		warn "Missing argument <customer>"
 		usage
 		exit 1
 	fi
@@ -157,10 +162,24 @@ require_base_is_on_master() {
 	fi
 }
 
+validate_customer_arg() {
+	if ! [[ $CUSTOMER =~ ^[A-Za-z0-9-]+$ ]] ; then 
+		warn "Customer name can only use these characters: [A-Za-z0-9-]"
+		usage
+		exit 1
+	fi
+}
+
 cmd_start() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
+	DEFINE_boolean forceversion false "don't validate the release branch version" a
 	parse_args "$@"
 	require_version_arg
+	if noflag forceversion; then
+		validate_version_arg "$VERSION"
+	fi
+	require_customer_arg
+	validate_customer_arg
 	require_base_arg
 	require_base_is_on_master
 
@@ -175,10 +194,13 @@ cmd_start() {
 
 	# create branch
 	git_do checkout -b "$BRANCH" "$BASE"
+	git_do commit --allow-empty --quiet -m "Starting support branch $VERSION"
+	git_do tag -a -m "Starting support branch $VERSION" "$VERSION-support.$CUSTOMER"
 
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
 	echo "- You are now on branch '$BRANCH'"
+	echo "- $BRANCH has been tagged"
 	echo
 }

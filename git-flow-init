@@ -37,7 +37,7 @@
 #
 
 usage() {
-	echo "usage: git flow init [-fd]"
+	echo "usage: git flow init [-ft]"
 }
 
 parse_args() {
@@ -48,8 +48,8 @@ parse_args() {
 
 # Default entry when no SUBACTION is given
 cmd_default() {
+	DEFINE_boolean initial_tag false 'create an empty commit on develop, if it needs to be created, and tag it v0.0.0-dev' t
 	DEFINE_boolean force false 'force setting of gitflow branches, even if already configured' f
-	DEFINE_boolean defaults false 'use default branch naming conventions' d
 	parse_args "$@"
 	
 	if ! git rev-parse --git-dir >/dev/null 2>&1; then
@@ -68,10 +68,6 @@ cmd_default() {
 
 	local branch_count
 	local answer
-
-    if flag defaults; then
-        warn "Using default branch names."
-    fi
 
 	# add a master branch if no such branch exists yet
 	local master_branch
@@ -108,12 +104,8 @@ cmd_default() {
 		fi
 		
 		printf "Branch name for production releases: [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		master_branch=${answer:-$default_suggestion}
+		printf "\n"
+		master_branch=$default_suggestion
 
 		# check existence in case of an already existing repo
 		if [ "$should_check_existence" = "YES" ]; then
@@ -167,12 +159,8 @@ cmd_default() {
 		fi
 
 		printf "Branch name for \"next release\" development: [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		develop_branch=${answer:-$default_suggestion}
+		printf "\n"
+		develop_branch=$default_suggestion
 
 		if [ "$master_branch" = "$develop_branch" ]; then
 			die "Production and integration branches should differ."
@@ -226,6 +214,11 @@ cmd_default() {
 	# switch to develop branch if its newly created
 	if [ $created_gitflow_branch -eq 1 ]; then
 		git_do checkout -q "$develop_branch"
+		local dev_initial_tag="v0.1.0-dev"
+		if flag initial_tag ; then
+			git_do commit --quiet --allow-empty -m "Initial develop branch commit"
+			git_do tag -a -m "Initial develop tag" "$dev_initial_tag"
+		fi
 	fi
 
 	# finally, ask the user for naming conventions (branch and tag prefixes)
@@ -233,8 +226,7 @@ cmd_default() {
 	   ! git config --get gitflow.prefix.feature >/dev/null 2>&1 || 
 	   ! git config --get gitflow.prefix.release >/dev/null 2>&1 || 
 	   ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || 
-	   ! git config --get gitflow.prefix.support >/dev/null 2>&1 || 
-	   ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1; then
+	   ! git config --get gitflow.prefix.support >/dev/null 2>&1; then 
 		echo
 		echo "How to name your supporting branch prefixes?"
 	fi
@@ -245,12 +237,8 @@ cmd_default() {
 	if ! git config --get gitflow.prefix.feature >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.feature || echo feature/)
 		printf "Feature branches? [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		printf "\n"
+		prefix=$default_suggestion
 		git_do config gitflow.prefix.feature "$prefix"
 	fi
 
@@ -258,12 +246,8 @@ cmd_default() {
 	if ! git config --get gitflow.prefix.release >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.release || echo release/)
 		printf "Release branches? [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		printf "\n"
+		prefix=$default_suggestion
 		git_do config gitflow.prefix.release "$prefix"
 	fi
 
@@ -272,12 +256,8 @@ cmd_default() {
 	if ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.hotfix || echo hotfix/)
 		printf "Hotfix branches? [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		printf "\n"
+		prefix=$default_suggestion
 		git_do config gitflow.prefix.hotfix "$prefix"
 	fi
 
@@ -286,29 +266,10 @@ cmd_default() {
 	if ! git config --get gitflow.prefix.support >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.support || echo support/)
 		printf "Support branches? [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
+		printf "\n"
+		prefix=$default_suggestion
 		git_do config gitflow.prefix.support "$prefix"
 	fi
-
-
-	# Version tag prefix
-	if ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 || flag force; then
-		default_suggestion=$(git config --get gitflow.prefix.versiontag || echo "")
-		printf "Version tag prefix? [$default_suggestion] "
-		if noflag defaults; then
-			read answer
-		else
-			printf "\n"
-		fi
-		[ "$answer" = "-" ] && prefix= || prefix=${answer:-$default_suggestion}
-		git_do config gitflow.prefix.versiontag "$prefix"
-	fi
-
 
 	# TODO: what to do with origin?
 }
