@@ -1,4 +1,6 @@
-t-flow make-less installer for *nix systems, by Rick Osborne
+#!/bin/sh
+
+# git-flow make-less installer for *nix systems, by Rick Osborne
 # Based on the git-flow core Makefile:
 # http://github.com/nvie/gitflow/blob/master/Makefile
 
