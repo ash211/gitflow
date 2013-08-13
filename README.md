@@ -27,14 +27,12 @@ Not all of these may be accurate as this version of git-flow has significant cha
 Installing git-flow
 -------------------
 
-* Get palantir git-flow
-  * Clone this repo onto your system and open the 'gitflow' directory
-* Run $unzipped_or_cloned_gitflow_dir/installers/gitflow-installer.sh
+* Clone this repo and run 'installers/gitflow_installer.sh'
 
 Uninstalling git-flow
 ---------------------
 
-* Run $unzipped_or_cloned_gitflow_dir/installers/gitflow-installer.sh uninstall
+* Clone this repo and run 'installers/gitflow_installer.sh uninstall'
 
 
 Differences
