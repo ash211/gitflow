@@ -5,7 +5,7 @@ A collection of Git extensions to provide high-level repository operations
 for Vincent Driessen's [branching model](http://nvie.com/git-model "original
 blog post").
 
-The palantir version of git-flow adds extra tags that can be leveraged by versioning tools.
+The Palantir version of git-flow adds extra tags that can be leveraged by versioning tools.
 
 
 Getting started
@@ -35,8 +35,8 @@ Uninstalling git-flow
 * Clone this repo and run 'installers/gitflow_installer.sh uninstall'
 
 
-Differences
------------
+Differences in Palantir git-flow
+--------------------------------
 
 * git flow init does not have configurable branch names
 * git flow init has a new option '-t' that creates an empty commit on the develop branch and tags it '0.0.0-dev'
